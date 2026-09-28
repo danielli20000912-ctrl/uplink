@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "uplink v0 discovery document (GET /.well-known/uplink.json)",
+  "type": "object",
+  "required": [
+    "protocol",
+    "versions",
+    "api_base",
+    "currency",
+    "cost_precision",
+    "endpoints",
+    "capabilities"
+  ],
+  "properties": {
+    "protocol": {
+      "const": "uplink"
+    },
+    "versions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^v[0-9]+$"
+      },
+      "contains": {
+        "const": "v0"
+      },
+      "uniqueItems": true
+    },
+    "api_base": {
+      "description": "Base URL for model calls, e.g. https://api.example.com/v1.",
+      "type": "string",
+      "format": "uri"
+    },
+    "platform": {
+      "description": "Informational. e.g. new-api, sub2api, other.",
+      "type": "string",
+      "maxLength": 64
+    },
+    "currency": {
+      "$ref": "common.json#/$defs/currency"
+    },
+    "cost_precision": {
+      "description": "Decimal places of every cost this publisher reports. Recomputed costs within one unit of this precision count as a match.",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 12
+    },
+    "cost_quantum": {
+      "description": "Smallest amount the publisher actually deducts (e.g. one internal quota unit converted to currency). Widens the reconciliation tolerance; see spec/README.md section 6.",
+      "$ref": "common.json#/$defs/decimal"
+    },
+    "usage_lag_seconds": {
+      "description": "Upper bound on how long after a request finishes its usage record may take to appear.",
+      "type": "integer",
+      "minimum": 0,
+      "default": 300
+    },
+    "request_id_header": {
+      "description": "Response header on model calls whose value equals usage record request_id.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9-]+$"
+    },
+    "endpoints": {
+      "type": "object",
+      "required": [
+        "catalog"
+      ],
+      "properties": {
+        "catalog": {
+          "$ref": "#/$defs/path"
+        },
+        "account": {
+          "$ref": "#/$defs/path"
+        },
+        "usage": {
+          "$ref": "#/$defs/path"
+        },
+        "usage_summary": {
+          "$ref": "#/$defs/path"
+        },
+        "status": {
+          "$ref": "#/$defs/path"
+        }
+      },
+      "additionalProperties": false
+    },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "catalog",
+          "account",
+          "usage.records",
+          "usage.summary",
+          "status",
+          "errors.redacted"
+        ]
+      },
+      "contains": {
+        "const": "catalog"
+      },
+      "uniqueItems": true
+    },
+    "contact": {
+      "type": "string",
+      "maxLength": 200
+    }
+  },
+  "patternProperties": {
+    "^x-": true
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "path": {
+      "type": "string",
+      "pattern": "^/"
+    }
+  }
+}

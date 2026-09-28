@@ -1,0 +1,560 @@
+{
+  "description": "Cost test vectors for uplink v0. Every implementation of the cost formula in spec/README.md must reproduce expect exactly.",
+  "cases": [
+    {
+      "name": "cache discount",
+      "price": {
+        "unit": "per_1m_tokens",
+        "input": "2.50",
+        "cached_input": "0.25",
+        "cache_write": "3.125",
+        "cache_write_1h": "5.00",
+        "output": "15.00",
+        "basis": "whole_request",
+        "tiers": [
+          {
+            "above_tokens": 272000,
+            "input": "5.00",
+            "cached_input": "0.50",
+            "output": "22.50"
+          }
+        ]
+      },
+      "cost_precision": 6,
+      "created_at": "2026-09-28T04:00:00Z",
+      "tokens": {
+        "input": 448,
+        "cached_input": 9984,
+        "cache_write": 0,
+        "cache_write_1h": 0,
+        "output": 812
+      },
+      "expect": {
+        "cost": "0.015796"
+      }
+    },
+    {
+      "name": "cache write 5m vs 1h",
+      "price": {
+        "unit": "per_1m_tokens",
+        "input": "2.50",
+        "cached_input": "0.25",
+        "cache_write": "3.125",
+        "cache_write_1h": "5.00",
+        "output": "15.00",
+        "basis": "whole_request",
+        "tiers": [
+          {
+            "above_tokens": 272000,
+            "input": "5.00",
+            "cached_input": "0.50",
+            "output": "22.50"
+          }
+        ]
+      },
+      "cost_precision": 6,
+      "created_at": "2026-09-28T04:00:00Z",
+      "tokens": {
+        "input": 1000,
+        "cached_input": 0,
+        "cache_write": 2000,
+        "cache_write_1h": 3000,
+        "output": 0
+      },
+      "expect": {
+        "cost": "0.023750"
+      }
+    },
+    {
+      "name": "context exactly at tier threshold stays on base",
+      "price": {
+        "unit": "per_1m_tokens",
+        "input": "2.50",
+        "cached_input": "0.25",
+        "cache_write": "3.125",
+        "cache_write_1h": "5.00",
+        "output": "15.00",
+        "basis": "whole_request",
+        "tiers": [
+          {
+            "above_tokens": 272000,
+            "input": "5.00",
+            "cached_input": "0.50",
+            "output": "22.50"
+          }
+        ]
+      },
+      "cost_precision": 6,
+      "created_at": "2026-09-28T04:00:00Z",
+      "tokens": {
+        "input": 272000,
+        "cached_input": 0,
+        "cache_write": 0,
+        "cache_write_1h": 0,
+        "output": 100
+      },
+      "expect": {
+        "cost": "0.681500"
+      }
+    },
+    {
+      "name": "context one token over threshold uses tier for whole request",
+      "price": {
+        "unit": "per_1m_tokens",
+        "input": "2.50",
+        "cached_input": "0.25",
+        "cache_write": "3.125",
+        "cache_write_1h": "5.00",
+        "output": "15.00",
+        "basis": "whole_request",
+        "tiers": [
+          {
+            "above_tokens": 272000,
+            "input": "5.00",
+            "cached_input": "0.50",
+            "output": "22.50"
+          }
+        ]
+      },
+      "cost_precision": 6,
+      "created_at": "2026-09-28T04:00:00Z",
+      "tokens": {
+        "input": 272001,
+        "cached_input": 0,
+        "cache_write": 0,
+        "cache_write_1h": 0,
+        "output": 100
+      },
+      "expect": {
+        "cost": "1.362255"
+      }
+    },
+    {
+      "name": "context counts cached and cache-write tokens; tier omits cache_write so it falls back to tier input; half-up rounding",
+      "price": {
+        "unit": "per_1m_tokens",
+        "input": "2.50",
+        "cached_input": "0.25",
+        "cache_write": "3.125",
+        "cache_write_1h": "5.00",
+        "output": "15.00",
+        "basis": "whole_request",
+        "tiers": [
+          {
+            "above_tokens": 272000,
+            "input": "5.00",
+            "cached_input": "0.50",
+            "output": "22.50"
+          }
+        ]
+      },
+      "cost_precision": 6,
+      "created_at": "2026-09-28T04:00:00Z",
+      "tokens": {
+        "input": 200000,
+        "cached_input": 72001,
+        "cache_write": 1000,
+        "cache_write_1h": 0,
+        "output": 0
+      },
+      "expect": {
+        "cost": "1.041001"
+      }
+    },
+    {
+      "name": "rounding half up",
+      "price": {
+        "unit": "per_1m_tokens",
+        "input": "2.50",
+        "cached_input": "0.25",
+        "cache_write": "3.125",
+        "cache_write_1h": "5.00",
+        "output": "15.00",
+        "basis": "whole_request",
+        "tiers": [
+          {
+            "above_tokens": 272000,
+            "input": "5.00",
+            "cached_input": "0.50",
+            "output": "22.50"
+          }
+        ]
+      },
+      "cost_precision": 6,
+      "created_at": "2026-09-28T04:00:00Z",
+      "tokens": {
+        "input": 1,
+        "cached_input": 0,
+        "cache_write": 0,
+        "cache_write_1h": 0,
+        "output": 0
+      },
+      "expect": {
+        "cost": "0.000003"
+      }
+    },
+    {
+      "name": "rounding to 2 places",
+      "price": {
+        "unit": "per_1m_tokens",
+        "input": "2.50",
+        "cached_input": "0.25",
+        "cache_write": "3.125",
+        "cache_write_1h": "5.00",
+        "output": "15.00",
+        "basis": "whole_request",
+        "tiers": [
+          {
+            "above_tokens": 272000,
+            "input": "5.00",
+            "cached_input": "0.50",
+            "output": "22.50"
+          }
+        ]
+      },
+      "cost_precision": 2,
+      "created_at": "2026-09-28T04:00:00Z",
+      "tokens": {
+        "input": 1000,
+        "cached_input": 0,
+        "cache_write": 0,
+        "cache_write_1h": 0,
+        "output": 1000
+      },
+      "expect": {
+        "cost": "0.02"
+      }
+    },
+    {
+      "name": "omitted cached_input billed at input price",
+      "price": {
+        "unit": "per_1m_tokens",
+        "input": "2.00",
+        "output": "8.00"
+      },
+      "cost_precision": 6,
+      "created_at": "2026-09-28T04:00:00Z",
+      "tokens": {
+        "input": 0,
+        "cached_input": 1000,
+        "cache_write": 0,
+        "cache_write_1h": 0,
+        "output": 0
+      },
+      "expect": {
+        "cost": "0.002000"
+      }
+    },
+    {
+      "name": "omitted cache_write_1h billed at cache_write price",
+      "price": {
+        "unit": "per_1m_tokens",
+        "input": "2.00",
+        "cache_write": "2.50",
+        "output": "8.00"
+      },
+      "cost_precision": 6,
+      "created_at": "2026-09-28T04:00:00Z",
+      "tokens": {
+        "input": 0,
+        "cached_input": 0,
+        "cache_write": 0,
+        "cache_write_1h": 1000,
+        "output": 0
+      },
+      "expect": {
+        "cost": "0.002500"
+      }
+    },
+    {
+      "name": "time window start is inclusive",
+      "price": {
+        "unit": "per_1m_tokens",
+        "input": "2.50",
+        "cached_input": "0.25",
+        "cache_write": "3.125",
+        "cache_write_1h": "5.00",
+        "output": "15.00",
+        "basis": "whole_request",
+        "tiers": [
+          {
+            "above_tokens": 272000,
+            "input": "5.00",
+            "cached_input": "0.50",
+            "output": "22.50"
+          }
+        ]
+      },
+      "time_pricing": {
+        "timezone": "Asia/Shanghai",
+        "weekdays_only": true,
+        "windows": [
+          {
+            "start": "09:00",
+            "end": "18:00",
+            "multiplier": "1.5"
+          }
+        ]
+      },
+      "cost_precision": 6,
+      "created_at": "2026-09-28T09:00:00+08:00",
+      "tokens": {
+        "input": 1000,
+        "cached_input": 0,
+        "cache_write": 0,
+        "cache_write_1h": 0,
+        "output": 1000
+      },
+      "expect": {
+        "cost": "0.026250"
+      }
+    },
+    {
+      "name": "time window end is exclusive",
+      "price": {
+        "unit": "per_1m_tokens",
+        "input": "2.50",
+        "cached_input": "0.25",
+        "cache_write": "3.125",
+        "cache_write_1h": "5.00",
+        "output": "15.00",
+        "basis": "whole_request",
+        "tiers": [
+          {
+            "above_tokens": 272000,
+            "input": "5.00",
+            "cached_input": "0.50",
+            "output": "22.50"
+          }
+        ]
+      },
+      "time_pricing": {
+        "timezone": "Asia/Shanghai",
+        "weekdays_only": true,
+        "windows": [
+          {
+            "start": "09:00",
+            "end": "18:00",
+            "multiplier": "1.5"
+          }
+        ]
+      },
+      "cost_precision": 6,
+      "created_at": "2026-09-28T18:00:00+08:00",
+      "tokens": {
+        "input": 1000,
+        "cached_input": 0,
+        "cache_write": 0,
+        "cache_write_1h": 0,
+        "output": 1000
+      },
+      "expect": {
+        "cost": "0.017500"
+      }
+    },
+    {
+      "name": "created_at converted to window timezone",
+      "price": {
+        "unit": "per_1m_tokens",
+        "input": "2.50",
+        "cached_input": "0.25",
+        "cache_write": "3.125",
+        "cache_write_1h": "5.00",
+        "output": "15.00",
+        "basis": "whole_request",
+        "tiers": [
+          {
+            "above_tokens": 272000,
+            "input": "5.00",
+            "cached_input": "0.50",
+            "output": "22.50"
+          }
+        ]
+      },
+      "time_pricing": {
+        "timezone": "Asia/Shanghai",
+        "weekdays_only": true,
+        "windows": [
+          {
+            "start": "09:00",
+            "end": "18:00",
+            "multiplier": "1.5"
+          }
+        ]
+      },
+      "cost_precision": 6,
+      "created_at": "2026-09-28T01:00:00Z",
+      "tokens": {
+        "input": 1000,
+        "cached_input": 0,
+        "cache_write": 0,
+        "cache_write_1h": 0,
+        "output": 1000
+      },
+      "expect": {
+        "cost": "0.026250"
+      }
+    },
+    {
+      "name": "weekdays_only skips Saturday",
+      "price": {
+        "unit": "per_1m_tokens",
+        "input": "2.50",
+        "cached_input": "0.25",
+        "cache_write": "3.125",
+        "cache_write_1h": "5.00",
+        "output": "15.00",
+        "basis": "whole_request",
+        "tiers": [
+          {
+            "above_tokens": 272000,
+            "input": "5.00",
+            "cached_input": "0.50",
+            "output": "22.50"
+          }
+        ]
+      },
+      "time_pricing": {
+        "timezone": "Asia/Shanghai",
+        "weekdays_only": true,
+        "windows": [
+          {
+            "start": "09:00",
+            "end": "18:00",
+            "multiplier": "1.5"
+          }
+        ]
+      },
+      "cost_precision": 6,
+      "created_at": "2026-10-03T10:00:00+08:00",
+      "tokens": {
+        "input": 1000,
+        "cached_input": 0,
+        "cache_write": 0,
+        "cache_write_1h": 0,
+        "output": 1000
+      },
+      "expect": {
+        "cost": "0.017500"
+      }
+    },
+    {
+      "name": "multiplier applies after tier selection",
+      "price": {
+        "unit": "per_1m_tokens",
+        "input": "2.50",
+        "cached_input": "0.25",
+        "cache_write": "3.125",
+        "cache_write_1h": "5.00",
+        "output": "15.00",
+        "basis": "whole_request",
+        "tiers": [
+          {
+            "above_tokens": 272000,
+            "input": "5.00",
+            "cached_input": "0.50",
+            "output": "22.50"
+          }
+        ]
+      },
+      "time_pricing": {
+        "timezone": "Asia/Shanghai",
+        "weekdays_only": true,
+        "windows": [
+          {
+            "start": "09:00",
+            "end": "18:00",
+            "multiplier": "1.5"
+          }
+        ]
+      },
+      "cost_precision": 6,
+      "created_at": "2026-09-28T10:00:00+08:00",
+      "tokens": {
+        "input": 272001,
+        "cached_input": 0,
+        "cache_write": 0,
+        "cache_write_1h": 0,
+        "output": 100
+      },
+      "expect": {
+        "cost": "2.043383"
+      }
+    },
+    {
+      "name": "per_request pricing",
+      "price": {
+        "unit": "per_request",
+        "price": "0.08"
+      },
+      "cost_precision": 6,
+      "created_at": "2026-09-28T04:00:00Z",
+      "units": 3,
+      "expect": {
+        "cost": "0.240000"
+      }
+    },
+    {
+      "name": "per_request defaults to one unit",
+      "price": {
+        "unit": "per_request",
+        "price": "0.08"
+      },
+      "cost_precision": 6,
+      "created_at": "2026-09-28T04:00:00Z",
+      "expect": {
+        "cost": "0.080000"
+      }
+    },
+    {
+      "name": "custom pricing is not computable",
+      "price": {
+        "unit": "custom",
+        "description": "expression"
+      },
+      "cost_precision": 6,
+      "created_at": "2026-09-28T04:00:00Z",
+      "tokens": {
+        "input": 1,
+        "cached_input": 0,
+        "cache_write": 0,
+        "cache_write_1h": 0,
+        "output": 1
+      },
+      "expect": {
+        "error": "not_computable"
+      }
+    },
+    {
+      "name": "time window uses local wall-clock time on a daylight-saving day",
+      "price": {
+        "unit": "per_1m_tokens",
+        "input": "2.00",
+        "output": "8.00"
+      },
+      "time_pricing": {
+        "timezone": "America/New_York",
+        "weekdays_only": false,
+        "windows": [
+          {
+            "start": "09:30",
+            "end": "10:30",
+            "multiplier": "2"
+          }
+        ]
+      },
+      "cost_precision": 6,
+      "created_at": "2026-03-08T14:00:00Z",
+      "tokens": {
+        "input": 1000,
+        "cached_input": 0,
+        "cache_write": 0,
+        "cache_write_1h": 0,
+        "output": 1000
+      },
+      "expect": {
+        "cost": "0.020000"
+      }
+    }
+  ]
+}

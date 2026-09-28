@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "uplink v0 account (GET /uplink/v0/account)",
+  "type": "object",
+  "required": ["currency", "unlimited"],
+  "properties": {
+    "currency": { "$ref": "common.json#/$defs/currency" },
+    "unlimited": { "type": "boolean" },
+    "balance": { "$ref": "common.json#/$defs/decimal" },
+    "expires_at": { "$ref": "common.json#/$defs/timestamp" },
+    "rate_limits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["scope", "window", "limit"],
+        "properties": {
+          "scope": { "type": "string", "enum": ["requests", "tokens", "cost"] },
+          "window": { "type": "string", "pattern": "^[1-9][0-9]*(s|m|h|d)$" },
+          "limit": { "$ref": "common.json#/$defs/decimal" },
+          "remaining": { "$ref": "common.json#/$defs/decimal" },
+          "resets_at": { "$ref": "common.json#/$defs/timestamp" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "concurrency_limit": { "type": "integer", "minimum": 1 }
+  },
+  "if": { "properties": { "unlimited": { "const": false } } },
+  "then": { "properties": { "balance": true }, "required": ["balance"] },
+  "patternProperties": { "^x-": true },
+  "additionalProperties": false
+}

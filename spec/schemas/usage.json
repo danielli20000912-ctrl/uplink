@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "uplink v0 usage page (GET /uplink/v0/usage)",
+  "type": "object",
+  "required": ["records", "next_cursor"],
+  "properties": {
+    "records": { "type": "array", "items": { "$ref": "#/$defs/record" } },
+    "next_cursor": { "description": "null when there are no more records in the requested range.", "type": ["string", "null"] }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "record": {
+      "description": "One settled, immutable charge. Records are ordered by created_at then request_id ascending.",
+      "type": "object",
+      "required": ["request_id", "created_at", "model", "endpoint", "tokens", "cost", "currency", "status"],
+      "properties": {
+        "request_id": {
+          "description": "The request identifier the upstream returned to the caller in a response header (for New API: X-Oneapi-Request-Id). Unique per publisher.",
+          "type": "string", "minLength": 1, "maxLength": 128
+        },
+        "created_at": { "$ref": "common.json#/$defs/timestamp" },
+        "model": { "$ref": "common.json#/$defs/modelId" },
+        "endpoint": { "$ref": "common.json#/$defs/endpoint" },
+        "stream": { "type": "boolean" },
+        "tokens": { "$ref": "common.json#/$defs/tokens" },
+        "units": { "description": "Billable count for per_request pricing.", "type": "integer", "minimum": 1, "default": 1 },
+        "cost": { "$ref": "common.json#/$defs/decimal" },
+        "currency": { "$ref": "common.json#/$defs/currency" },
+        "status": { "type": "string", "enum": ["success", "error"] },
+        "duration_ms": { "type": "integer", "minimum": 0 },
+        "catalog_version": { "description": "catalog_version whose prices produced this cost, if known.", "type": "string" }
+      },
+      "patternProperties": { "^x-": true },
+      "additionalProperties": false
+    }
+  }
+}

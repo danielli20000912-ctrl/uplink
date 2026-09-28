@@ -1,0 +1,14 @@
+{
+  "granularity": "day",
+  "timezone": "Asia/Shanghai",
+  "currency": "CNY",
+  "buckets": [
+    {
+      "date": "2026-09-28",
+      "model": "example-large",
+      "requests": 1,
+      "tokens": { "input": 448, "cached_input": 9984, "cache_write": 0, "output": 812, "reasoning": 256 },
+      "cost": "0.023694"
+    }
+  ]
+}

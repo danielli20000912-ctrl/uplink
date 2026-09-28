@@ -1,0 +1,29 @@
+{
+  "records": [
+    {
+      "request_id": "20260928120301123456789abcdef",
+      "created_at": "2026-09-28T12:03:01+08:00",
+      "model": "example-large",
+      "endpoint": "responses",
+      "stream": true,
+      "tokens": { "input": 448, "cached_input": 9984, "cache_write": 0, "output": 812, "reasoning": 256 },
+      "cost": "0.023694",
+      "currency": "CNY",
+      "status": "success",
+      "duration_ms": 8123,
+      "catalog_version": "sha256:3b1f0c9e"
+    },
+    {
+      "request_id": "20260928120455987654321fedcba",
+      "created_at": "2026-09-28T12:04:55+08:00",
+      "model": "example-image",
+      "endpoint": "images",
+      "tokens": { "input": 0, "cached_input": 0, "output": 0 },
+      "units": 2,
+      "cost": "0.160000",
+      "currency": "CNY",
+      "status": "success"
+    }
+  ],
+  "next_cursor": null
+}

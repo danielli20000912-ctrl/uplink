@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "uplink v0 catalog (GET /uplink/v0/catalog)",
+  "description": "Models and effective prices for the API key that made the request. Must not reveal group, channel or account names.",
+  "type": "object",
+  "required": ["catalog_version", "generated_at", "currency", "models"],
+  "properties": {
+    "catalog_version": { "description": "Opaque; changes whenever any field below changes.", "type": "string", "minLength": 1, "maxLength": 128 },
+    "generated_at": { "$ref": "common.json#/$defs/timestamp" },
+    "currency": { "$ref": "common.json#/$defs/currency" },
+    "models": { "type": "array", "items": { "$ref": "#/$defs/model" } },
+    "pending_changes": {
+      "description": "Announced price changes that are not yet in effect.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["model", "effective_at", "price"],
+        "properties": {
+          "model": { "$ref": "common.json#/$defs/modelId" },
+          "effective_at": { "$ref": "common.json#/$defs/timestamp" },
+          "price": { "$ref": "common.json#/$defs/price" },
+          "time_pricing": { "$ref": "common.json#/$defs/timePricing" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "patternProperties": { "^x-": true },
+  "additionalProperties": false,
+  "$defs": {
+    "model": {
+      "type": "object",
+      "required": ["id", "endpoints", "price", "status"],
+      "properties": {
+        "id": { "$ref": "common.json#/$defs/modelId" },
+        "endpoints": { "type": "array", "items": { "$ref": "common.json#/$defs/endpoint" }, "minItems": 1, "uniqueItems": true },
+        "context_window": { "type": "integer", "minimum": 1 },
+        "price": { "$ref": "common.json#/$defs/price" },
+        "time_pricing": { "$ref": "common.json#/$defs/timePricing" },
+        "capabilities": {
+          "type": "object",
+          "properties": {
+            "cache_affinity": {
+              "description": "Where the upstream reads its session-affinity key, as location.field (e.g. body.prompt_cache_key, header.session_id). Downstream must forward it unchanged.",
+              "type": "string",
+              "pattern": "^(body|header)\\.[A-Za-z0-9_.-]+$"
+            },
+            "streaming": { "type": "boolean" }
+          },
+          "patternProperties": { "^x-": true },
+          "additionalProperties": false
+        },
+        "status": { "type": "string", "enum": ["available", "limited", "unavailable"] }
+      },
+      "patternProperties": { "^x-": true },
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "generated_at": "2026-09-28T12:05:00+08:00",
+  "window_seconds": 900,
+  "models": [
+    { "id": "example-large", "state": "ok", "success_rate": "0.994", "sample_size": 412, "p50_first_token_ms": 1800 },
+    { "id": "example-messages", "state": "degraded", "success_rate": "0.871", "sample_size": 93 }
+  ],
+  "notices": [ { "at": "2026-09-27T01:00:00+08:00", "level": "info", "text": "Scheduled maintenance, about 10 minutes." } ]
+}

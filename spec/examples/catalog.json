@@ -1,0 +1,61 @@
+{
+  "catalog_version": "sha256:3b1f0c9e",
+  "generated_at": "2026-09-28T12:00:00+08:00",
+  "currency": "CNY",
+  "models": [
+    {
+      "id": "example-large",
+      "endpoints": ["chat.completions", "responses"],
+      "context_window": 400000,
+      "price": {
+        "unit": "per_1m_tokens",
+        "input": "2.50",
+        "cached_input": "0.25",
+        "output": "15.00",
+        "basis": "whole_request",
+        "tiers": [
+          { "above_tokens": 272000, "input": "5.00", "cached_input": "0.50", "output": "22.50" }
+        ]
+      },
+      "time_pricing": {
+        "timezone": "Asia/Shanghai",
+        "weekdays_only": true,
+        "windows": [ { "start": "09:00", "end": "18:00", "multiplier": "1.5" } ]
+      },
+      "capabilities": { "cache_affinity": "body.prompt_cache_key", "streaming": true },
+      "status": "available"
+    },
+    {
+      "id": "example-messages",
+      "endpoints": ["messages"],
+      "price": {
+        "unit": "per_1m_tokens",
+        "input": "3.00",
+        "cached_input": "0.30",
+        "cache_write": "3.75",
+        "cache_write_1h": "6.00",
+        "output": "15.00"
+      },
+      "status": "limited"
+    },
+    {
+      "id": "example-image",
+      "endpoints": ["images"],
+      "price": { "unit": "per_request", "price": "0.08" },
+      "status": "available"
+    },
+    {
+      "id": "example-expr",
+      "endpoints": ["chat.completions"],
+      "price": { "unit": "custom", "description": "Billed by an expression over request fields; see the upstream's pricing page." },
+      "status": "available"
+    }
+  ],
+  "pending_changes": [
+    {
+      "model": "example-large",
+      "effective_at": "2026-10-13T00:00:00+08:00",
+      "price": { "unit": "per_1m_tokens", "input": "2.80", "cached_input": "0.28", "output": "16.00" }
+    }
+  ]
+}

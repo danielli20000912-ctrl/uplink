@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "uplink v0 status (GET /uplink/v0/status)",
+  "description": "Self-reported by the upstream. Downstream should compare it with its own measurements.",
+  "type": "object",
+  "required": ["generated_at", "window_seconds", "models"],
+  "properties": {
+    "generated_at": { "$ref": "common.json#/$defs/timestamp" },
+    "window_seconds": { "type": "integer", "minimum": 60 },
+    "models": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "state", "sample_size"],
+        "properties": {
+          "id": { "$ref": "common.json#/$defs/modelId" },
+          "state": { "type": "string", "enum": ["ok", "degraded", "down"] },
+          "success_rate": { "$ref": "common.json#/$defs/ratio" },
+          "sample_size": { "type": "integer", "minimum": 0 },
+          "p50_first_token_ms": { "type": "integer", "minimum": 0 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "notices": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["at", "level", "text"],
+        "properties": {
+          "at": { "$ref": "common.json#/$defs/timestamp" },
+          "level": { "type": "string", "enum": ["info", "warning", "critical"] },
+          "text": { "type": "string", "maxLength": 2000 }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "patternProperties": { "^x-": true },
+  "additionalProperties": false
+}

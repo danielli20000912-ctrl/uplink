@@ -1,0 +1,9 @@
+{
+  "currency": "CNY",
+  "unlimited": false,
+  "balance": "812.35",
+  "rate_limits": [
+    { "scope": "requests", "window": "1m", "limit": "120", "remaining": "117" },
+    { "scope": "cost", "window": "5h", "limit": "200", "remaining": "163.4" }
+  ]
+}

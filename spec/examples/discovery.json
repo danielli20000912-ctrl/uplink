@@ -1,0 +1,29 @@
+{
+  "protocol": "uplink",
+  "versions": [
+    "v0"
+  ],
+  "api_base": "https://api.example.com/v1",
+  "platform": "new-api",
+  "currency": "CNY",
+  "cost_precision": 6,
+  "cost_quantum": "0.000002",
+  "usage_lag_seconds": 120,
+  "request_id_header": "X-Oneapi-Request-Id",
+  "endpoints": {
+    "catalog": "/uplink/v0/catalog",
+    "account": "/uplink/v0/account",
+    "usage": "/uplink/v0/usage",
+    "usage_summary": "/uplink/v0/usage/summary",
+    "status": "/uplink/v0/status"
+  },
+  "capabilities": [
+    "catalog",
+    "account",
+    "usage.records",
+    "usage.summary",
+    "status",
+    "errors.redacted"
+  ],
+  "contact": "support@example.com"
+}

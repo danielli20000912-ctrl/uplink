@@ -1,0 +1,218 @@
+openapi: 3.1.0
+info:
+  title: uplink
+  version: 0.1.0-draft
+  summary: Read-only interface an API provider publishes for its resellers.
+  description: |
+    uplink v0 lets a downstream reseller discover an upstream provider's models,
+    effective prices, balance, per-request usage and health, using only the API key
+    it already uses for model calls. Normative rules are in spec/README.md; field
+    definitions are in spec/schemas/*.json. Where this file and the schemas
+    disagree, the schemas win.
+  license:
+    name: Apache-2.0
+    identifier: Apache-2.0
+servers:
+  - url: https://api.example.com
+security:
+  - apiKey: []
+tags:
+  - name: discovery
+    description: Find out whether and how a host speaks uplink.
+  - name: catalog
+    description: Models and prices, scoped to the calling key.
+  - name: account
+    description: Balance and limits, scoped to the calling key.
+  - name: usage
+    description: Settled charges for reconciliation.
+  - name: status
+    description: Self-reported model health.
+
+paths:
+  /.well-known/uplink.json:
+    get:
+      operationId: getDiscovery
+      tags: [discovery]
+      summary: Protocol versions, endpoints and capabilities of this publisher.
+      security: []
+      responses:
+        "200":
+          description: Discovery document.
+          content:
+            application/json:
+              schema: { $ref: "./schemas/discovery.json" }
+              examples:
+                default: { externalValue: "./examples/discovery.json" }
+        "404": { description: This host does not publish uplink. }
+
+  /uplink/v0/catalog:
+    get:
+      operationId: getCatalog
+      tags: [catalog]
+      summary: Models and effective prices for the calling API key.
+      parameters:
+        - $ref: "#/components/parameters/IfNoneMatch"
+      responses:
+        "200":
+          description: Catalog.
+          headers:
+            ETag: { $ref: "#/components/headers/ETag" }
+          content:
+            application/json:
+              schema: { $ref: "./schemas/catalog.json" }
+              examples:
+                default: { externalValue: "./examples/catalog.json" }
+        "304": { description: Not modified since the ETag in If-None-Match. }
+        "401": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /uplink/v0/account:
+    get:
+      operationId: getAccount
+      tags: [account]
+      summary: Balance and limits of the calling API key.
+      responses:
+        "200":
+          description: Account.
+          headers:
+            Cache-Control: { $ref: "#/components/headers/NoStore" }
+          content:
+            application/json:
+              schema: { $ref: "./schemas/account.json" }
+              examples:
+                default: { externalValue: "./examples/account.json" }
+        "401": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /uplink/v0/usage:
+    get:
+      operationId: listUsage
+      tags: [usage]
+      summary: Settled per-request charges of the calling API key.
+      parameters:
+        - $ref: "#/components/parameters/Since"
+        - $ref: "#/components/parameters/Until"
+        - name: model
+          in: query
+          required: false
+          schema: { type: string }
+        - name: cursor
+          in: query
+          required: false
+          description: Opaque value from a previous page's next_cursor.
+          schema: { type: string }
+        - name: limit
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 1000, default: 100 }
+      responses:
+        "200":
+          description: One page of usage records.
+          headers:
+            Cache-Control: { $ref: "#/components/headers/NoStore" }
+          content:
+            application/json:
+              schema: { $ref: "./schemas/usage.json" }
+              examples:
+                default: { externalValue: "./examples/usage.json" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /uplink/v0/usage/summary:
+    get:
+      operationId: getUsageSummary
+      tags: [usage]
+      summary: Daily per-model totals of the calling API key.
+      parameters:
+        - $ref: "#/components/parameters/Since"
+        - $ref: "#/components/parameters/Until"
+        - name: timezone
+          in: query
+          required: false
+          description: IANA zone used to cut days. Defaults to the publisher's zone.
+          schema: { type: string }
+      responses:
+        "200":
+          description: Daily totals.
+          headers:
+            Cache-Control: { $ref: "#/components/headers/NoStore" }
+          content:
+            application/json:
+              schema: { $ref: "./schemas/usage_summary.json" }
+              examples:
+                default: { externalValue: "./examples/usage_summary.json" }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /uplink/v0/status:
+    get:
+      operationId: getStatus
+      tags: [status]
+      summary: Self-reported health of the models the calling API key can use.
+      parameters:
+        - $ref: "#/components/parameters/IfNoneMatch"
+      responses:
+        "200":
+          description: Status.
+          headers:
+            ETag: { $ref: "#/components/headers/ETag" }
+          content:
+            application/json:
+              schema: { $ref: "./schemas/status.json" }
+              examples:
+                default: { externalValue: "./examples/status.json" }
+        "304": { description: Not modified since the ETag in If-None-Match. }
+        "401": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+components:
+  securitySchemes:
+    apiKey:
+      type: http
+      scheme: bearer
+      description: The same API key the downstream uses for model calls. Must not be accepted in the query string.
+
+  parameters:
+    IfNoneMatch:
+      name: If-None-Match
+      in: header
+      required: false
+      schema: { type: string }
+    Since:
+      name: since
+      in: query
+      required: true
+      description: Inclusive lower bound on created_at (RFC 3339).
+      schema: { type: string, format: date-time }
+    Until:
+      name: until
+      in: query
+      required: true
+      description: Exclusive upper bound on created_at (RFC 3339). until - since must not exceed 31 days.
+      schema: { type: string, format: date-time }
+
+  headers:
+    ETag:
+      schema: { type: string }
+    NoStore:
+      description: Must be "private, no-store".
+      schema: { type: string, const: "private, no-store" }
+
+  responses:
+    Error:
+      description: Error. The message must not reveal group, channel, account or upstream names.
+      content:
+        application/json:
+          schema: { $ref: "./schemas/error.json" }
+          examples:
+            default: { externalValue: "./examples/error.json" }
+    RateLimited:
+      description: Too many requests.
+      headers:
+        Retry-After:
+          schema: { type: integer, minimum: 1 }
+      content:
+        application/json:
+          schema: { $ref: "./schemas/error.json" }
