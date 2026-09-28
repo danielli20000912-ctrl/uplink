@@ -148,22 +148,30 @@ func TimeMultiplier(tp *TimePricing, createdAt time.Time) (*big.Rat, error) {
 
 // RoundHalfUp formats a non-negative r with exactly precision decimal places.
 func RoundHalfUp(r *big.Rat, precision int) string {
+	sign := ""
+	if r.Sign() < 0 {
+		// Negative values (margins) round half away from zero.
+		sign, r = "-", new(big.Rat).Neg(r)
+	}
 	scale := new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(precision)), nil)
-	// floor((num*scale*2 + den) / (2*den))
+	// floor((num*scale*2 + den) / (2*den)); num >= 0 here
 	num := new(big.Int).Mul(r.Num(), scale)
 	num.Mul(num, big.NewInt(2))
 	num.Add(num, r.Denom())
 	den := new(big.Int).Mul(r.Denom(), big.NewInt(2))
 	q := new(big.Int).Quo(num, den)
+	if q.Sign() == 0 {
+		sign = ""
+	}
 
 	s := q.String()
 	if precision == 0 {
-		return s
+		return sign + s
 	}
 	if len(s) <= precision {
 		s = strings.Repeat("0", precision-len(s)+1) + s
 	}
-	return s[:len(s)-precision] + "." + s[len(s)-precision:]
+	return sign + s[:len(s)-precision] + "." + s[len(s)-precision:]
 }
 
 func dec(s *string, name string) (*big.Rat, error) {

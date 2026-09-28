@@ -14,7 +14,7 @@ A reseller that connects to an upstream today pastes an API key into its own gat
 
 It works with existing gateways (New API, sub2api) without modifying them: a small **publisher** runs beside the upstream gateway, and a **sync** tool beside the downstream one.
 
-> **Status: v0 draft.** The specification is drafted. The New API publisher (`uplink export` + `uplink publish`) and the conformance check (`uplink check`) pass an end-to-end test against New API v1.0.0-rc.40; see [docs/adapters/newapi.md](docs/adapters/newapi.md). The downstream sync tool is not written yet.
+> **Status: v0 draft.** The specification is drafted. The New API publisher (`uplink export` + `uplink publish`) and the conformance check (`uplink check`) pass an end-to-end test against New API v1.0.0-rc.40; see [docs/adapters/newapi.md](docs/adapters/newapi.md). The downstream sync tool (`uplink sync`) passes an end-to-end test with two New API instances, an upstream and a reseller; see [docs/sync.md](docs/sync.md).
 
 ## 中文简介
 
@@ -28,10 +28,11 @@ spec/            the specification — start with spec/README.md
   schemas/       JSON Schema 2020-12 for every response
   examples/      one valid example per schema
   vectors/       cost test vectors every implementation must reproduce
-cmd/uplink       uplink export | publish | check
-internal/        protocol (wire types, cost formula), export, exportdb, publish, check
-adapters/newapi  New API: database reader, /api/pricing translation, billing-expression subset parser
-e2e/newapi       end-to-end test against a real New API binary
+cmd/uplink       uplink export | publish | check | sync
+internal/        protocol (wire types, cost formula), export, exportdb, publish, check,
+                 client (uplink consumer), downstream (sync: pricing plan, ownership state, reconciliation)
+adapters/newapi  New API: database reader, /api/pricing translation, billing-expression parser and writer, admin client
+e2e/newapi       end-to-end tests against real New API binaries (publisher; two-station sync)
 deploy/          example configs
 scripts/         spec checks
 docs/            design rationale, adapter guides
@@ -43,7 +44,7 @@ docs/            design rationale, adapter guides
 go test ./...                    # Go reference cost formula against spec/vectors
 python3 scripts/validate_spec.py # examples vs schemas, plus an independent Python cost formula
 npx @redocly/cli lint spec/openapi.yaml
-make e2e NEWAPI=/path/to/new-api   # end-to-end against a New API binary
+make e2e NEWAPI=/path/to/new-api   # both end-to-end tests against a New API binary
 ```
 
 ## License

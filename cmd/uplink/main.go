@@ -3,6 +3,7 @@
 //	uplink export  -config export.yaml [-once]
 //	uplink publish -config publish.yaml
 //	uplink check   -base https://api.example.com -key-env UPLINK_KEY [-since 24h] [-save dir]
+//	uplink sync    -config sync.yaml [-once] [-adopt m,..|all] [-approve m,..|all] [-release m,..|all] [-ack]
 package main
 
 import (
@@ -12,12 +13,14 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
 	"gopkg.in/yaml.v3"
 
 	"uplink/internal/check"
+	"uplink/internal/downstream"
 	"uplink/internal/export"
 	"uplink/internal/publish"
 )
@@ -34,13 +37,15 @@ func main() {
 		runPublish(args)
 	case "check":
 		runCheck(args)
+	case "sync":
+		runSync(args)
 	default:
 		usage()
 	}
 }
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "usage: uplink export|publish|check [flags]")
+	fmt.Fprintln(os.Stderr, "usage: uplink export|publish|check|sync [flags]")
 	os.Exit(2)
 }
 
@@ -112,5 +117,45 @@ func runCheck(args []string) {
 	rep.Print(os.Stdout)
 	if !rep.OK() {
 		os.Exit(1)
+	}
+}
+
+func splitArg(s string) []string {
+	var out []string
+	for _, p := range strings.Split(s, ",") {
+		if p = strings.TrimSpace(p); p != "" {
+			out = append(out, p)
+		}
+	}
+	return out
+}
+
+func runSync(args []string) {
+	fs := flag.NewFlagSet("sync", flag.ExitOnError)
+	cfgPath := fs.String("config", "sync.yaml", "config file")
+	once := fs.Bool("once", false, "run one cycle and exit")
+	adopt := fs.String("adopt", "", "take over pricing of these models (comma-separated, or all)")
+	approve := fs.String("approve", "", "apply held price changes for these models (comma-separated, or all)")
+	release := fs.String("release", "", "stop managing these models and restore their previous pricing (comma-separated, or all)")
+	ack := fs.Bool("ack", false, "clear holds after checking the alerts that raised them")
+	fs.Parse(args)
+	var cfg downstream.Config
+	loadYAML(*cfgPath, &cfg)
+	s, err := downstream.New(cfg, os.Stdout)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer s.Close()
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	act := downstream.Actions{Adopt: splitArg(*adopt), Approve: splitArg(*approve), Release: splitArg(*release), Ack: *ack}
+	if *once || len(act.Adopt)+len(act.Approve)+len(act.Release) > 0 || act.Ack {
+		if err := s.Once(ctx, act); err != nil {
+			log.Fatal(err)
+		}
+		return
+	}
+	if err := s.Run(ctx); err != nil {
+		log.Fatal(err)
 	}
 }

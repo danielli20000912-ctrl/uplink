@@ -1,0 +1,25 @@
+# uplink sync: runs beside the reseller's (downstream) New API. No listener.
+downstream:
+  base_url: http://new-api:3000          # your New API
+  admin_token_env: UPLINK_ADMIN_TOKEN    # a root user's access token (model pricing is root-only in New API)
+  currency: CNY
+  price_per_quota_usd: "7.3"             # what your customers pay for one USD of quota; must equal your real price
+upstreams:
+  - name: our-pool                       # any label; appears in logs
+    base_url: https://api.upstream.example   # where the upstream serves /.well-known/uplink.json
+    key_env: UPLINK_UPSTREAM_KEY         # the API key this upstream issued to you (the one in your channels)
+    channel_ids: [12, 13]                # your New API channels that use that key
+    markup: "1.3"                        # sell price = upstream price x markup, before your group ratios
+fx:                                      # only when an upstream bills in another currency
+  USD: "7.10"                            # downstream currency per 1 USD
+pricing:
+  apply: preview                         # preview: write only on -adopt / -approve; auto: also apply small changes
+  max_auto_change_pct: "20"              # larger changes always wait for -approve
+  min_group_ratio: "1"                   # your lowest group ratio; prices must keep min_margin_pct even there
+  min_margin_pct: "5"
+  round_to: "0.000001"                   # expression coefficients are rounded up to this
+reconcile:
+  lookback: 24h
+  margin_alert_pct: "10"                 # a request earning less than this raises an alert and pauses auto changes
+state_db: /uplink/sync-state.db
+interval: 5m

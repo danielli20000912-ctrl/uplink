@@ -120,15 +120,15 @@ def call(method, url, body=None, token=None, headers=None, expect=200):
     return code, out
 
 
-def api(method, path, body=None, token=None, headers=None):
-    _, out = call(method, NEWAPI + path, body, token, headers)
+def api(method, path, body=None, token=None, headers=None, base=None):
+    _, out = call(method, (base or NEWAPI) + path, body, token, headers)
     if not isinstance(out, dict) or not out.get("success", False):
         raise RuntimeError(f"{method} {path}: {out}")
     return out.get("data")
 
 
-def login(username, password):
-    return api("POST", "/api/user/login", {"username": username, "password": password})["access_token"]
+def login(username, password, base=None):
+    return api("POST", "/api/user/login", {"username": username, "password": password}, base=base)["access_token"]
 
 
 def wait_http(url, timeout=90):
@@ -171,26 +171,26 @@ def configure(root):
         "models": "claude-ratio", "group": "default,partner", "status": 1}}, root)
 
 
-def make_user(root, username, group, quota):
-    api("POST", "/api/user/", {"username": username, "password": USER_PASS, "display_name": username}, root)
-    users = api("GET", f"/api/user/search?keyword={username}", token=root)
+def make_user(root, username, group, quota, base=None):
+    api("POST", "/api/user/", {"username": username, "password": USER_PASS, "display_name": username}, root, base=base)
+    users = api("GET", f"/api/user/search?keyword={username}", token=root, base=base)
     items = users["items"] if isinstance(users, dict) else users
     u = next(x for x in items if x["username"] == username)
     u.update({"group": group, "password": ""})
-    api("PUT", "/api/user/", u, root)
+    api("PUT", "/api/user/", u, root, base=base)
     if quota:
-        api("POST", "/api/user/manage", {"id": u["id"], "action": "add_quota", "mode": "add", "value": quota}, root)
+        api("POST", "/api/user/manage", {"id": u["id"], "action": "add_quota", "mode": "add", "value": quota}, root, base=base)
     return u["id"]
 
 
-def make_key(user_token, name, remain_quota=0, unlimited=True, model_limits=""):
+def make_key(user_token, name, remain_quota=0, unlimited=True, model_limits="", base=None):
     api("POST", "/api/token/", {"name": name, "remain_quota": remain_quota, "unlimited_quota": unlimited,
                                 "expired_time": -1, "group": "", "model_limits_enabled": bool(model_limits),
-                                "model_limits": model_limits}, user_token)
-    page = api("GET", "/api/token/?p=1&size=100", token=user_token)
+                                "model_limits": model_limits}, user_token, base=base)
+    page = api("GET", "/api/token/?p=1&size=100", token=user_token, base=base)
     items = page["items"] if isinstance(page, dict) else page
     tid = next(x for x in items if x["name"] == name)["id"]
-    key = api("POST", f"/api/token/{tid}/key", {}, user_token)
+    key = api("POST", f"/api/token/{tid}/key", {}, user_token, base=base)
     key = key["key"] if isinstance(key, dict) else key
     return tid, key if key.startswith("sk-") else "sk-" + key
 
@@ -205,10 +205,12 @@ def remember(key):
     SENT_IDS.setdefault(key, []).append(rid)
 
 
-def make_pat(username):
-    tok = login(username, USER_PASS)
-    proof = api("POST", "/api/verify", {"method": "password", "scope": "access_token.generate", "password": USER_PASS}, tok)
-    pat = api("POST", "/api/user/token", {}, tok, {"X-Security-Proof": proof["proof_token"]})
+def make_pat(username, password=None, base=None):
+    """A long-lived access token (Settings -> Access token), not a login session."""
+    password = password or USER_PASS
+    tok = login(username, password, base)
+    proof = api("POST", "/api/verify", {"method": "password", "scope": "access_token.generate", "password": password}, tok, base=base)
+    pat = api("POST", "/api/user/token", {}, tok, {"X-Security-Proof": proof["proof_token"]}, base=base)
     return pat["token"] if isinstance(pat, dict) else pat
 
 

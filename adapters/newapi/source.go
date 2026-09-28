@@ -192,26 +192,27 @@ FROM logs WHERE id > ? AND type IN (?, ?) ORDER BY id LIMIT ?`, afterID, logType
 	return out, rows.Err()
 }
 
-// normalizeBuckets maps New API usage to uplink's disjoint buckets, following
-// service/text_quota.go: OpenAI-semantics prompt tokens include cache reads and
-// writes; Anthropic-semantics prompt tokens exclude them.
+// normalizeBuckets maps New API usage to uplink's disjoint buckets.
 func normalizeBuckets(r *exportdb.UsageRow, prompt int64, o logOther) {
-	r.CachedInput = o.CacheTokens
+	r.Input, r.CachedInput, r.CacheWrite, r.CacheWrite1 = normalize(prompt, o)
+}
+
+// normalize follows service/text_quota.go: OpenAI-semantics prompt tokens
+// include cache reads and writes; Anthropic-semantics prompt tokens exclude them.
+func normalize(prompt int64, o logOther) (input, cached, write, write1h int64) {
+	cached = o.CacheTokens
 	if o.UsageSemantic == "anthropic" {
-		r.Input = prompt
 		rest := o.CacheCreationTokens - o.CacheCreationTokens5m - o.CacheCreationTokens1h
 		if rest < 0 {
 			rest = 0
 		}
-		r.CacheWrite = rest + o.CacheCreationTokens5m
-		r.CacheWrite1 = o.CacheCreationTokens1h
-		return
+		return prompt, cached, rest + o.CacheCreationTokens5m, o.CacheCreationTokens1h
 	}
-	r.CacheWrite = o.CacheCreationTokens
-	r.Input = prompt - o.CacheTokens - o.CacheCreationTokens
-	if r.Input < 0 {
-		r.Input = 0
+	input = prompt - o.CacheTokens - o.CacheCreationTokens
+	if input < 0 {
+		input = 0
 	}
+	return input, cached, o.CacheCreationTokens, 0
 }
 
 // unmodeled lists charge components uplink v0 prices do not describe.

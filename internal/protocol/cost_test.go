@@ -73,6 +73,10 @@ func TestRoundHalfUp(t *testing.T) {
 		{5, 1000, 2, "0.01"},
 		{0, 1, 6, "0.000000"},
 		{123456, 1, 2, "123456.00"},
+		{-27, 1, 2, "-27.00"},
+		{-5, 100, 2, "-0.05"},
+		{-25, 10, 0, "-3"},
+		{-1, 1000, 2, "0.00"},
 	}
 	for _, c := range cases {
 		if got := RoundHalfUp(ratOf(c.num, c.den), c.prec); got != c.want {
