@@ -1,0 +1,14 @@
+# uplink export: runs beside New API. No listener.
+newapi:
+  base_url: http://new-api:3000          # New API's own HTTP port, internal network
+  db_path: /newapi-data/one-api.db       # mount New API's data dir read-write; the connection is read-only
+  log_db_path: ""                        # only if LOG_SQL_DSN points to a separate SQLite file
+  probes:
+    - group: partner                     # a group whose members are resellers
+      access_token_env: UPLINK_PROBE_PARTNER
+currency: CNY
+price_per_usd: "1"                       # what you charge for one USD of quota; must equal your real price
+export_db: /uplink/export.db
+interval: 30s
+retention_days: 62
+status_window: 15m

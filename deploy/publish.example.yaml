@@ -1,0 +1,10 @@
+# uplink publish: internet-facing. Mount only the export file.
+listen: 0.0.0.0:8790
+export_db: /uplink/export.db
+api_base: https://api.example.com/v1
+contact: support@example.com
+usage_lag_seconds: 120                   # at least 2x the exporter interval plus New API's log delay
+rate_limit_per_minute: 60
+summary_timezone: Asia/Shanghai
+stale_after: 5m                          # refuse to serve if the exporter stopped
+claim_errors_redacted: false             # New API errors name groups; keep false

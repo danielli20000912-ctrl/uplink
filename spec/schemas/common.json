@@ -35,7 +35,8 @@
         "responses",
         "messages",
         "embeddings",
-        "images"
+        "images",
+        "other"
       ]
     },
     "clockTime": {

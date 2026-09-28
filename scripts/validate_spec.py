@@ -103,7 +103,29 @@ def compute_cost(price, time_pricing, created_at, tokens, units, precision) -> s
     return str(total.quantize(Decimal(1).scaleb(-precision), rounding=ROUND_HALF_UP))
 
 
+def validate_responses(directory: Path) -> int:
+    """Validate saved live responses (from `uplink check -save`) against the schemas."""
+    failures, n = [], 0
+    for f in sorted(directory.glob("*.json")):
+        name = f.stem.split("-")[0]
+        schema = SCHEMAS / f"{name}.json"
+        if not schema.exists():
+            continue
+        n += 1
+        for err in validator_for(schema).iter_errors(load(f)):
+            failures.append(f"{f.name}: {'/'.join(map(str, err.absolute_path))}: {err.message}")
+    if failures:
+        print("FAIL")
+        for x in failures:
+            print("  -", x)
+        return 1
+    print(f"OK: {n} live responses valid")
+    return 0
+
+
 def main() -> int:
+    if len(sys.argv) == 3 and sys.argv[1] == "--responses":
+        return validate_responses(Path(sys.argv[2]))
     failures = []
 
     for schema_path in sorted(SCHEMAS.glob("*.json")):

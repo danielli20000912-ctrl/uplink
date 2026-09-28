@@ -92,7 +92,7 @@ Every conforming implementation MUST compute the same cost for the same price, t
 
 ## 9. Status
 
-`GET /uplink/v0/status` is self-reported by the publisher over the last `window_seconds`. Consumers SHOULD show it next to their own measurements and SHOULD NOT treat it as proof of service quality.
+`GET /uplink/v0/status` is self-reported by the publisher over the last `window_seconds`. It covers only the traffic served the same way as the calling key's requests (for example, the same group or channel set), and MUST NOT let one key infer another group's traffic volume. Consumers SHOULD show it next to their own measurements and SHOULD NOT treat it as proof of service quality.
 
 ## 10. Errors
 

@@ -14,7 +14,7 @@ A reseller that connects to an upstream today pastes an API key into its own gat
 
 It works with existing gateways (New API, sub2api) without modifying them: a small **publisher** runs beside the upstream gateway, and a **sync** tool beside the downstream one.
 
-> **Status: v0 draft.** The specification is being written. There is no publisher or sync implementation yet.
+> **Status: v0 draft.** The specification is drafted. The New API publisher (`uplink export` + `uplink publish`) and the conformance check (`uplink check`) pass an end-to-end test against New API v1.0.0-rc.40; see [docs/adapters/newapi.md](docs/adapters/newapi.md). The downstream sync tool is not written yet.
 
 ## 中文简介
 
@@ -28,9 +28,13 @@ spec/            the specification — start with spec/README.md
   schemas/       JSON Schema 2020-12 for every response
   examples/      one valid example per schema
   vectors/       cost test vectors every implementation must reproduce
-internal/protocol  Go wire types and the reference cost formula
+cmd/uplink       uplink export | publish | check
+internal/        protocol (wire types, cost formula), export, exportdb, publish, check
+adapters/newapi  New API: database reader, /api/pricing translation, billing-expression subset parser
+e2e/newapi       end-to-end test against a real New API binary
+deploy/          example configs
 scripts/         spec checks
-docs/            design rationale
+docs/            design rationale, adapter guides
 ```
 
 ## Checks
@@ -39,6 +43,7 @@ docs/            design rationale
 go test ./...                    # Go reference cost formula against spec/vectors
 python3 scripts/validate_spec.py # examples vs schemas, plus an independent Python cost formula
 npx @redocly/cli lint spec/openapi.yaml
+make e2e NEWAPI=/path/to/new-api   # end-to-end against a New API binary
 ```
 
 ## License
