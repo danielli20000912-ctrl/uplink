@@ -120,6 +120,7 @@ type exportMeta struct {
 	quantum    *big.Rat
 	exportedAt time.Time
 	window     time.Duration
+	errorLogs  bool // status is published only when failures are recorded
 }
 
 func (s *Server) meta() (*exportMeta, error) {
@@ -147,6 +148,8 @@ func (s *Server) meta() (*exportMeta, error) {
 		secs = 900
 	}
 	m.window = time.Duration(secs) * time.Second
+	el, _ := get(exportdb.MetaErrorLogs)
+	m.errorLogs = el == "true"
 	return &m, nil
 }
 
@@ -166,7 +169,14 @@ func (s *Server) discovery(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusServiceUnavailable, "unavailable", "not ready")
 		return
 	}
-	caps := []string{"catalog", "account", "usage.records", "usage.summary", "status"}
+	caps := []string{"catalog", "account", "usage.records", "usage.summary"}
+	endpoints := map[string]string{
+		"catalog": pathCatalog, "account": pathAccount, "usage": pathUsage, "usage_summary": pathSummary,
+	}
+	if m.errorLogs {
+		caps = append(caps, "status")
+		endpoints["status"] = pathStatus
+	}
 	if s.cfg.ClaimErrorsRedacted {
 		caps = append(caps, "errors.redacted")
 	}
@@ -181,12 +191,9 @@ func (s *Server) discovery(w http.ResponseWriter, r *http.Request) {
 		CostQuantum:     protocol.FormatDecimal(m.quantum),
 		UsageLagSeconds: s.cfg.UsageLagSeconds,
 		RequestIDHeader: "X-Oneapi-Request-Id",
-		Endpoints: map[string]string{
-			"catalog": pathCatalog, "account": pathAccount, "usage": pathUsage,
-			"usage_summary": pathSummary, "status": pathStatus,
-		},
-		Capabilities: caps,
-		Contact:      s.cfg.Contact,
+		Endpoints:       endpoints,
+		Capabilities:    caps,
+		Contact:         s.cfg.Contact,
 	})
 }
 
@@ -548,6 +555,10 @@ WHERE token_id = ? AND status = 'success' AND created_at >= ? AND created_at < ?
 // ---- status ----
 
 func (s *Server) status(w http.ResponseWriter, r *http.Request, key *exportdb.KeyRow, m *exportMeta) {
+	if !m.errorLogs {
+		writeError(w, http.StatusNotFound, "not_found", "status is not published: failed requests are not recorded")
+		return
+	}
 	models, _, ok, err := s.keyModels(key)
 	if err != nil || !ok {
 		writeError(w, http.StatusForbidden, "permission_denied", "no catalog is published for this key")

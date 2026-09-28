@@ -325,6 +325,7 @@ newapi:
   probes:
     - group: partner
       access_token_env: UPLINK_PROBE_PARTNER
+  error_logs: true
 currency: CNY
 price_per_usd: "1"
 export_db: {exp_dir / 'export.db'}

@@ -109,3 +109,31 @@ func TestBuildModelsExprCost(t *testing.T) {
 		t.Errorf("cost %s, want 0.251250", cost)
 	}
 }
+
+// Shapes seen on a production New API: Chinese tier names containing "≤" and
+// "<", three-term OpenAI-style expressions (no cache write terms), and
+// single-tier five-term Anthropic-style ones. Names here are placeholders.
+func TestTranslateProductionShapes(t *testing.T) {
+	cases := []struct {
+		expr string
+		want string // input,cached,cache_write,cache_write_1h,output [| above:input,cached,output]
+	}{
+		{`len <= 272000 ? tier("上下文 ≤ 272K", p * 5 + c * 30 + cr * 0.5) : tier("272K < 上下文 ≤ 1.05M", p * 10 + c * 45 + cr * 1)`,
+			"1.25,0.125,1.25,0,7.5|272000:2.5,0.25,11.25"},
+		{`tier("base", p * 4 + c * 20 + cr * 0.2 + cc * 5 + cc1h * 8)`,
+			"1,0.05,1.25,2,5"},
+	}
+	for _, c := range cases {
+		p, err := translateExpr(c.expr, big.NewRat(1, 4), testMoney)
+		if err != nil {
+			t.Fatalf("%s: %v", c.expr, err)
+		}
+		got := s(p.Input) + "," + s(p.CachedInput) + "," + s(p.CacheWrite) + "," + s(p.CacheWrite1h) + "," + s(p.Output)
+		for _, tr := range p.Tiers {
+			got += "|" + big.NewInt(tr.AboveTokens).String() + ":" + s(tr.Input) + "," + s(tr.CachedInput) + "," + s(tr.Output)
+		}
+		if got != c.want {
+			t.Errorf("%s\n got  %s\n want %s", c.expr, got, c.want)
+		}
+	}
+}

@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -95,9 +96,11 @@ func Run(o Options) (*Report, error) {
 		rep.fail("account: balance missing for a limited key")
 	}
 
-	var st protocol.Status
-	if err := c.get(disc.Endpoints["status"], true, "status", &st); err != nil {
-		return nil, err
+	if slices.Contains(disc.Capabilities, "status") {
+		var st protocol.Status
+		if err := c.get(disc.Endpoints["status"], true, "status", &st); err != nil {
+			return nil, err
+		}
 	}
 
 	// Usage: page through the window and recompute every record.

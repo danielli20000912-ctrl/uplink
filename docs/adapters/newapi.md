@@ -54,6 +54,7 @@ All USD amounts are multiplied by `price_per_usd`, which is what the operator ch
 
 ## Known limitations (v0)
 
+- **Health status needs error logs.** New API writes a row for a failed request only when it runs with `ERROR_LOG_ENABLED=true` (off by default). Without those rows every success rate would read 100%, so the exporter's `newapi.error_logs` setting must match. When it is `false`, the publisher does not offer the status endpoint at all.
 - **Keys on the `auto` group** get every price as `custom`, because the group is chosen per request.
 - **Anthropic-format requests on an expression that does not price `cc`**: New API does not bill their cache writes, but the catalog prices them at the input price. The consumer's recomputed cost is then higher than the actual charge.
 - **Tool-call surcharges, image-token and audio-token pricing, and request-rule multipliers** are not expressible in v0. Records that include them carry `x-unmodeled` with the reason, and `uplink check` skips them.

@@ -1,4 +1,4 @@
-.PHONY: check test spec lint build e2e e2e-publish e2e-sync
+.PHONY: check test spec lint build build-linux e2e e2e-publish e2e-sync
 
 check: test spec
 
@@ -13,6 +13,11 @@ lint:
 
 build:
 	go build -o bin/uplink ./cmd/uplink
+
+# Static Linux binary for servers. Zone data is embedded because usage
+# summaries use a named time zone and minimal images have no zoneinfo.
+build-linux:
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -tags timetzdata -trimpath -o bin/uplink-linux-amd64 ./cmd/uplink
 
 # make e2e NEWAPI=/path/to/new-api-binary [WORK=/tmp/uplink-e2e]
 WORK ?= /tmp/uplink-e2e

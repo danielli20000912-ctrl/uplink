@@ -31,6 +31,11 @@ type Config struct {
 		DBPath    string  `yaml:"db_path"`
 		LogDBPath string  `yaml:"log_db_path"`
 		Probes    []Probe `yaml:"probes"`
+		// ErrorLogs must match New API's ERROR_LOG_ENABLED (default false).
+		// Without error logs, failed requests leave no row, so a success
+		// rate would always read 100%; the status endpoint is then not
+		// published.
+		ErrorLogs bool `yaml:"error_logs"`
 	} `yaml:"newapi"`
 	Currency      string        `yaml:"currency"`
 	PricePerUSD   string        `yaml:"price_per_usd"`
@@ -203,6 +208,7 @@ func (e *Exporter) Once(ctx context.Context) error {
 		exportdb.MetaPlatform:      "new-api",
 		exportdb.MetaLogConsumeOff: strconv.FormatBool(!opts.LogConsumeEnabled),
 		exportdb.MetaStatusWindowS: strconv.Itoa(int(e.cfg.StatusWindow.Seconds())),
+		exportdb.MetaErrorLogs:     strconv.FormatBool(e.cfg.NewAPI.ErrorLogs),
 	}
 	for k, v := range meta {
 		if err := exportdb.SetMeta(tx, k, v); err != nil {

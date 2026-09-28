@@ -158,6 +158,12 @@ stale_after: 30s
         procs.append(subprocess.Popen([a.uplink, "publish", "-config", str(work / "publish.yaml")],
                                       stdout=open(work / "publish.log", "w"), stderr=subprocess.STDOUT))
         u.wait_http(u.PUBLISH + "/.well-known/uplink.json")
+        # U runs New API with error logging off (its default): failures leave
+        # no trace, so the status endpoint must not be offered.
+        _, disc = u.call("GET", u.PUBLISH + "/.well-known/uplink.json")
+        code, _ = u.call("GET", u.PUBLISH + "/uplink/v0/status", token=key_a, expect=None)
+        expect("status" not in disc["capabilities"] and "status" not in disc["endpoints"] and code == 404,
+               f"status offered without error logs: caps={disc['capabilities']} code={code}")
 
         # ---------------------------------------------------------- station D
         start_newapi(D_PORT, work / "d")

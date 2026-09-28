@@ -77,6 +77,7 @@ const (
 	MetaPlatform      = "platform"
 	MetaLogConsumeOff = "log_consume_disabled"
 	MetaStatusWindowS = "status_window_seconds"
+	MetaErrorLogs     = "error_logs" // "true" if New API records failed requests
 )
 
 // Open opens (and for writers, creates) the export database.
